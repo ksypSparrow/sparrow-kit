@@ -7,6 +7,29 @@ Pre-1.0, **the minor is the breaking bump**.
 
 ## [Unreleased]
 
+## [0.2.0] — wave 1 · notebook reads
+
+Depends on **SparrowDomain 0.2.0** and **SparrowColdStorage 0.2.0**.
+
+### Added — `ServiceContracts`
+
+- `NotebookServicing` — `all()`, `notebook(_:)`, `notebook(named:)`,
+  `defaultNotebook()`. Reads only; writes arrive in 0.3.0 with transactions.
+
+### Added — `Services`
+
+- `NotebookService`, an actor over `NotebookReading`.
+
+### Notes
+
+- `defaultNotebook()` returns non-optional. Storage guarantees one exists, so
+  an optional would only push the decision into every caller.
+- A thin service on purpose. It gains real work in 0.3.0, when creating a
+  notebook has to validate a name and reject a cycle in the parent chain.
+- Behaviour is tested against the real in-memory store, so the suite fails if
+  cold-storage's seeding drifts. Failure translation is tested against a fake,
+  because the real store cannot be made to fail on demand.
+
 ## [0.1.0] — wave 0 · NoteServicing skeleton
 
 Depends on **SparrowDomain 0.1.0** and **SparrowColdStorage 0.1.0**.
