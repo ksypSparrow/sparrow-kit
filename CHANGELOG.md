@@ -7,6 +7,40 @@ Pre-1.0, **the minor is the breaking bump**.
 
 ## [Unreleased]
 
+## [0.3.0] — wave 2 · notebook writes and the change relay
+
+Depends on **SparrowDomain 0.3.0** and **SparrowColdStorage 0.3.0**.
+
+### Changed — breaking
+
+- **`NoteService.init` and `NotebookService.init` now take a `ChangeRelay`.**
+  Events go through it rather than each service owning a broadcaster, so a
+  burst reaches the UI as one change instead of hundreds.
+- Call sites inside `write { }` dropped their `await`, following
+  cold-storage 0.3.0's synchronous session. The `sequence: 0` placeholder
+  `NoteService` used to pass is gone — `JournalDraft` has no such field.
+- `NotebookServicing` gains `create`, `rename`, `delete` and `changes`.
+- `ServiceError` gains `notebookNotFound`, `emptyNotebookName`,
+  `notebookNotEmpty`.
+
+### Added
+
+- `ChangeRelay` — the only stateful service. Buffers for a window, and past a
+  threshold emits `.reloaded` once instead of listing every change.
+- `NotebookChange`.
+- `NotebookService.create` / `rename` / `delete`, each one `write { }`.
+
+### Notes
+
+- **Storage cannot tell a create from an update** — it only knows the row
+  moved. A service that just performed the write does know, so services
+  announce the precise verb and storage fills in everything the app did not do
+  itself. The precise verb wins the merge.
+- `delete` refuses a notebook that still has children, and checks that
+  **inside** the transaction. A check made outside could be true when it ran
+  and false by the time the delete landed.
+- Every tuning number lives in `ChangeRelay.Thresholds`.
+
 ## [0.2.0] — wave 1 · notebook reads
 
 Depends on **SparrowDomain 0.2.0** and **SparrowColdStorage 0.2.0**.

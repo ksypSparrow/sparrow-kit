@@ -11,15 +11,26 @@ import StorageContracts
 ///
 /// The test target links `ColdStorage`; `Sources/Services` never may.
 func makeService(
-    now: @escaping @Sendable () -> Date = { .distantPast }
+    now: @escaping @Sendable () -> Date = { .distantPast },
+    relay: ChangeRelay = ChangeRelay(thresholds: .immediate)
 ) throws -> (service: NoteService, storage: StorageSet) {
     let storage = try ColdStorage.inMemory()
     let service = NoteService(
         notes: storage.notes,
         transactions: storage.transactions,
+        relay: relay,
         now: now
     )
     return (service, storage)
+}
+
+extension ChangeRelay.Thresholds {
+    /// A window short enough that a test does not wait on it, but still a real
+    /// window — setting it to zero would test a code path that never ships.
+    static let immediate = ChangeRelay.Thresholds(
+        window: .milliseconds(1),
+        collapseAbove: 20
+    )
 }
 
 /// A clock that advances a fixed step on every read, so ordering assertions
