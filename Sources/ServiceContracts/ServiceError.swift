@@ -17,6 +17,9 @@ public enum ServiceError: Error, Hashable, Sendable {
     case notebookNotFound(NotebookID)
     case emptyNote
     case emptyNotebookName
+    /// A label with no letters or digits has no slug — `"!!!"`, `"🐦"`.
+    case emptyTagLabel
+    case tagNotFound(TagID)
     /// Deleting a notebook must not silently take its contents with it.
     case notebookNotEmpty(NotebookID)
     case storageUnavailable
@@ -33,6 +36,10 @@ extension ServiceError: LocalizedError {
             "A note needs a title or some text."
         case .emptyNotebookName:
             "A notebook needs a name."
+        case .emptyTagLabel:
+            "A tag needs a word or a number in it."
+        case .tagNotFound:
+            "That tag no longer exists."
         case .notebookNotEmpty:
             "That notebook still has things in it."
         case .storageUnavailable:
@@ -50,6 +57,10 @@ extension ServiceError: LocalizedError {
             "Add a title or a few words, then save."
         case .emptyNotebookName:
             "Give it a name, then save."
+        case .emptyTagLabel:
+            "Try something like \u{201C}wetlands\u{201D} or \u{201C}survey 2026\u{201D}."
+        case .tagNotFound:
+            "It may have been deleted on another device."
         case .notebookNotEmpty:
             "Move or delete what's inside it first."
         case .storageUnavailable:

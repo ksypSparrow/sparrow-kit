@@ -7,6 +7,37 @@ Pre-1.0, **the minor is the breaking bump**.
 
 ## [Unreleased]
 
+## [0.7.0] — wave 6 · tags
+
+Depends on **SparrowDomain 0.6.0** and **SparrowColdStorage 0.7.0**.
+
+### Added
+
+- `TagServicing` — `all()`, `tag(_:)`, `ensure(_:)`, `delete(_:)`, `changes`.
+- `TagService`, and `TagChange`.
+- `ChangeRelay` now coalesces tag events alongside notes and notebooks.
+- `ServiceError.emptyTagLabel` and `.tagNotFound`.
+
+### Fixed
+
+**`NoteService.create` was dropping `draft.tagIDs`.** The parameter did not
+exist when `create` was written in 0.4.0, and nothing failed when the domain
+added it — a note created with tags simply arrived without them. A test caught
+it.
+
+### Notes
+
+- **`ensure` is find-or-create in one transaction.** A read-then-write races
+  with itself: two notes tagged `#wetlands` at once would both find nothing and
+  both try to create it. Storage offers `upsert` for exactly this.
+- **Every tag a note claims is verified inside the transaction.** SQLite's
+  foreign key would reject an unknown tag, but as a `constraintViolated` that
+  reaches a person as "Sparrow can't reach your notes right now" — and the
+  in-memory store has no foreign key at all. One check in the service means one
+  message and two stores that agree.
+- `ensure` announces `.created` or `.updated` depending on whether the tag was
+  already there, which storage cannot distinguish.
+
 ## [0.6.0] — wave 5 · filtering
 
 Depends on **SparrowDomain 0.5.0** and **SparrowColdStorage 0.6.0**.
