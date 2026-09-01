@@ -7,6 +7,30 @@ Pre-1.0, **the minor is the breaking bump**.
 
 ## [Unreleased]
 
+## [0.6.0] — wave 5 · filtering
+
+Depends on **SparrowDomain 0.5.0** and **SparrowColdStorage 0.6.0**.
+
+### Added
+
+- `SearchServicing.filter(_:sort:limit:)` (**FR-1.4**) and
+  `count(matching:)`.
+- `NoteServicing.notes(in:limit:)` — **the deferral from 0.4.0, now closed.**
+
+### Notes
+
+- `notes(in:limit:)` is `NoteFilter(notebookID:)` underneath. It was deferred
+  in 0.4.0 because `NoteReading` had no by-notebook read and adding one would
+  have meant an unplanned storage release; `NoteFilter` subsumed it exactly as
+  predicted, and no extra storage API was needed.
+- **The service adds nothing to `filter` beyond error translation.** Deciding
+  *how* to answer — whether to consult the index, which columns to compare — is
+  storage's business, and `NoteFilter` is the whole of what passes between
+  them.
+- The sort tests compare against `NoteSort.orders(_:before:)` rather than a
+  hand-written expectation, the same discipline storage uses.
+- `SearchService` still holds no `TransactionRunning`.
+
 ## [0.5.0] — wave 4 · text search
 
 Depends on **SparrowColdStorage 0.5.0**. **SparrowDomain stays at 0.4.0** —

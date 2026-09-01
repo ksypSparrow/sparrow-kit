@@ -34,6 +34,29 @@ public actor SearchService: SearchServicing {
         }
     }
 
+    /// FR-1.4. Everything the filter names, in the order asked for.
+    ///
+    /// The service adds nothing to this beyond error translation. Deciding
+    /// *how* to answer — whether to consult the index, which columns to
+    /// compare — is storage's business, and `NoteFilter` is the whole of what
+    /// passes between them.
+    public func filter(
+        _ filter: NoteFilter,
+        sort: NoteSort,
+        limit: Int
+    ) async throws -> [Note] {
+        guard limit > 0 else { return [] }
+        return try await translatingStorageErrors {
+            try await notes.notes(matching: filter, sort: sort, limit: limit)
+        }
+    }
+
+    public func count(matching filter: NoteFilter) async throws -> Int {
+        try await translatingStorageErrors {
+            try await notes.count(matching: filter)
+        }
+    }
+
     public func suggestions(limit: Int) async throws -> [Note] {
         guard limit > 0 else { return [] }
         return try await translatingStorageErrors {

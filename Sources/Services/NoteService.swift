@@ -177,6 +177,23 @@ public actor NoteService: NoteServicing {
         }
     }
 
+    /// Deferred from 0.4.0, when `NoteReading` had no by-notebook read and
+    /// adding one would have meant an unplanned storage release. `NoteFilter`
+    /// subsumes it, exactly as the plan said it would.
+    public func notes(
+        in notebook: NotebookID?,
+        limit: Int
+    ) async throws -> [Note] {
+        guard limit > 0 else { return [] }
+        return try await translatingStorageErrors {
+            try await notes.notes(
+                matching: NoteFilter(notebookID: notebook),
+                sort: .mostRecent,
+                limit: limit
+            )
+        }
+    }
+
     // MARK: Resolution
 
     /// FR-1.1: a note can be captured without naming a notebook. Storage

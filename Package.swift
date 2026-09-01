@@ -11,11 +11,11 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/ksypSparrow/sparrow-domain",
-            .upToNextMinor(from: "0.4.0")
+            .upToNextMinor(from: "0.5.0")
         ),
         .package(
             url: "https://github.com/ksypSparrow/sparrow-cold-storage",
-            .upToNextMinor(from: "0.5.0")
+            .upToNextMinor(from: "0.6.0")
         ),
     ],
     targets: [

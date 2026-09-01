@@ -10,6 +10,20 @@ public protocol SearchServicing: Sendable {
     /// FR-1.3. Matches against the full text of every note.
     func search(_ text: String, limit: Int) async throws -> [Note]
 
+    /// FR-1.4. The Find action: structural fields, optional free text, and an
+    /// explicit order.
+    ///
+    /// `NoteFilter` is data all the way down — a Shortcut fills one in, and
+    /// storage compiles it. Neither end knows the other's vocabulary.
+    func filter(
+        _ filter: NoteFilter,
+        sort: NoteSort,
+        limit: Int
+    ) async throws -> [Note]
+
+    /// How many notes a filter would return, without fetching them.
+    func count(matching filter: NoteFilter) async throws -> Int
+
     /// FR-1.6. What to offer before anyone has typed anything.
     ///
     /// Separate from `NoteServicing.recent` on purpose. Today they return the
