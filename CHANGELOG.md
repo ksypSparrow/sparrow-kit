@@ -7,6 +7,39 @@ Pre-1.0, **the minor is the breaking bump**.
 
 ## [Unreleased]
 
+## [0.4.0] — wave 3 · note CRUD
+
+Depends on **SparrowDomain 0.4.0** and **SparrowColdStorage 0.4.0**.
+
+### Changed — breaking
+
+- **`NoteService.init` now takes `notebooks: any NotebookReading`.** Creating a
+  note resolves its notebook, and an unfiled draft resolves to the default.
+- `NoteServicing` gains `update`, `move`, `setPinned`.
+
+### Added
+
+- `NoteService.update` / `move` / `setPinned`, each one `write { }`.
+- Notebook resolution: `nil` → the default notebook (FR-1.1); a named notebook
+  that does not exist → `.notebookNotFound`.
+
+### Notes
+
+- **Resolution happens outside the transaction.** Holding a write open across a
+  lookup would serialise every concurrent capture behind it — and a bad
+  notebook then costs a read rather than a rolled-back write.
+- **A redundant edit writes nothing.** An empty `NoteEdit` is already a no-op in
+  the domain, but pinning an already-pinned note *names* a field, so `applying`
+  bumps `updatedAt` and the domain's rule does not catch it. The service
+  compares with the timestamp discounted, and skips the write, the journal
+  entry and the announcement.
+
+### Deferred
+
+`notes(in:limit:)` waits for 0.6.0. It needs a by-notebook read that
+`NoteReading` does not have, and adding one would mean an unplanned
+cold-storage release. Wave 5's `NoteFilter` subsumes it.
+
 ## [0.3.0] — wave 2 · notebook writes and the change relay
 
 Depends on **SparrowDomain 0.3.0** and **SparrowColdStorage 0.3.0**.

@@ -55,11 +55,11 @@ struct NoteServiceTests {
         let (service, _) = try makeService(now: clock.now)
 
         for title in ["Oldest", "Middle", "Newest"] {
-            try await service.create(NoteDraft(title: title))
+            try await service.create(NoteDraft(title: RichText(plain: title)))
         }
 
         let recent = try await service.recent(limit: 2)
-        #expect(recent.map(\.title) == ["Newest", "Middle"])
+        #expect(recent.map(\.plainTitle) == ["Newest", "Middle"])
     }
 
     @Test("notes(_:) resolves several identifiers at once")
@@ -70,7 +70,7 @@ struct NoteServiceTests {
         let second = try await service.create(NoteDraft(title: "Second"))
 
         let found = try await service.notes([first.id, second.id])
-        #expect(Set(found.map(\.title)) == ["First", "Second"])
+        #expect(Set(found.map(\.plainTitle)) == ["First", "Second"])
     }
 
     @Test("An unknown identifier reads as nil, not as an error")

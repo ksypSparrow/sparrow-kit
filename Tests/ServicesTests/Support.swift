@@ -17,6 +17,7 @@ func makeService(
     let storage = try ColdStorage.inMemory()
     let service = NoteService(
         notes: storage.notes,
+        notebooks: storage.notebooks,
         transactions: storage.transactions,
         relay: relay,
         now: now
