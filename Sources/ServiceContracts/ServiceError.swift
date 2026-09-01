@@ -14,7 +14,11 @@ import SparrowDomain
 /// use.
 public enum ServiceError: Error, Hashable, Sendable {
     case noteNotFound(NoteID)
+    case notebookNotFound(NotebookID)
     case emptyNote
+    case emptyNotebookName
+    /// Deleting a notebook must not silently take its contents with it.
+    case notebookNotEmpty(NotebookID)
     case storageUnavailable
 }
 
@@ -23,8 +27,14 @@ extension ServiceError: LocalizedError {
         switch self {
         case .noteNotFound:
             "That note no longer exists."
+        case .notebookNotFound:
+            "That notebook no longer exists."
         case .emptyNote:
             "A note needs a title or some text."
+        case .emptyNotebookName:
+            "A notebook needs a name."
+        case .notebookNotEmpty:
+            "That notebook still has things in it."
         case .storageUnavailable:
             "Sparrow can't reach your notes right now."
         }
@@ -34,8 +44,14 @@ extension ServiceError: LocalizedError {
         switch self {
         case .noteNotFound:
             "It may have been deleted on another device."
+        case .notebookNotFound:
+            "It may have been deleted on another device."
         case .emptyNote:
             "Add a title or a few words, then save."
+        case .emptyNotebookName:
+            "Give it a name, then save."
+        case .notebookNotEmpty:
+            "Move or delete what's inside it first."
         case .storageUnavailable:
             "Try again in a moment."
         }

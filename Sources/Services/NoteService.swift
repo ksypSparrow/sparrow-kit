@@ -22,24 +22,29 @@ import StorageContracts
 public actor NoteService: NoteServicing {
     private let notes: any NoteReading
     private let transactions: any TransactionRunning
+    private let relay: ChangeRelay
     private let now: @Sendable () -> Date
-    private let broadcaster = NoteChangeBroadcaster()
 
+    /// - Parameter relay: every event this service announces goes through it,
+    ///   so a burst of writes reaches the UI as one change rather than
+    ///   hundreds.
     /// - Parameter now: injected so date-dependent behaviour is testable
     ///   without waiting for the clock. It becomes a `Clock` abstraction in
     ///   0.8.0, when daily notes need one.
     public init(
         notes: any NoteReading,
         transactions: any TransactionRunning,
+        relay: ChangeRelay,
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.notes = notes
         self.transactions = transactions
+        self.relay = relay
         self.now = now
     }
 
     public nonisolated var changes: AsyncStream<NoteChange> {
-        broadcaster.stream()
+        relay.noteChanges
     }
 
     // MARK: Commands
@@ -58,11 +63,10 @@ public actor NoteService: NoteServicing {
 
         try await translatingStorageErrors {
             try await transactions.write { session in
-                try await session.notes.insert(note)
-                try await session.index.index(note)
-                try await session.journal.record(
-                    JournalEntry(
-                        sequence: 0,
+                try session.notes.insert(note)
+                try session.index.index(note)
+                try session.journal.record(
+                    JournalDraft(
                         subject: .note(note.id),
                         operation: .upsert,
                         payload: try JSONEncoder().encode(note),
@@ -72,7 +76,7 @@ public actor NoteService: NoteServicing {
             }
         }
 
-        broadcaster.publish(.created(note.id))
+        await relay.announce(.created(note.id))
         return note
     }
 
@@ -81,11 +85,10 @@ public actor NoteService: NoteServicing {
 
         try await translatingStorageErrors(missing: .noteNotFound(id)) {
             try await transactions.write { session in
-                try await session.notes.markDeleted(id, at: timestamp)
-                try await session.index.remove(id)
-                try await session.journal.record(
-                    JournalEntry(
-                        sequence: 0,
+                try session.notes.markDeleted(id, at: timestamp)
+                try session.index.remove(id)
+                try session.journal.record(
+                    JournalDraft(
                         subject: .note(id),
                         operation: .delete,
                         payload: Data(),
@@ -95,7 +98,7 @@ public actor NoteService: NoteServicing {
             }
         }
 
-        broadcaster.publish(.deleted(id))
+        await relay.announce(.deleted(id))
     }
 
     // MARK: Queries

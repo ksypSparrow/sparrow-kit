@@ -11,7 +11,12 @@ struct NotebookServiceTests {
     private func makeService() throws -> NotebookService {
         // The real in-memory store, so this suite fails if cold-storage's
         // seeding behaviour ever drifts from what the service assumes.
-        NotebookService(notebooks: try ColdStorage.inMemory().notebooks)
+        let storage = try ColdStorage.inMemory()
+        return NotebookService(
+            notebooks: storage.notebooks,
+            transactions: storage.transactions,
+            relay: ChangeRelay(thresholds: .immediate)
+        )
     }
 
     @Test("A fresh store already has a default notebook")
@@ -65,11 +70,15 @@ struct NotebookServiceTests {
 
     @Test("all() passes storage's ordering through unchanged")
     func orderingPassesThrough() async throws {
-        let service = NotebookService(notebooks: StubNotebookReader(notebooks: [
-            makeNotebook("Zostera", sortIndex: 1),
-            makeNotebook("Alder", sortIndex: 2),
-            makeNotebook("Alder Carr", sortIndex: 1),
-        ]))
+        let service = NotebookService(
+            notebooks: StubNotebookReader(notebooks: [
+                makeNotebook("Zostera", sortIndex: 1),
+                makeNotebook("Alder", sortIndex: 2),
+                makeNotebook("Alder Carr", sortIndex: 1),
+            ]),
+            transactions: try ColdStorage.inMemory().transactions,
+            relay: ChangeRelay(thresholds: .immediate)
+        )
 
         let names = try await service.all().map(\.name)
         #expect(names == ["Alder Carr", "Zostera", "Alder"])
@@ -78,8 +87,12 @@ struct NotebookServiceTests {
 
 @Suite("NotebookService · error translation")
 struct NotebookServiceErrorTests {
-    private func failing(_ error: StorageError) -> NotebookService {
-        NotebookService(notebooks: FailingNotebookReader(error: error))
+    private func failing(_ error: StorageError) throws -> NotebookService {
+        NotebookService(
+            notebooks: FailingNotebookReader(error: error),
+            transactions: try ColdStorage.inMemory().transactions,
+            relay: ChangeRelay(thresholds: .immediate)
+        )
     }
 
     /// The assertion the layering rests on. An intent that had to catch
@@ -96,7 +109,7 @@ struct NotebookServiceErrorTests {
         ]
     )
     func storageFailuresAreTranslated(error: StorageError) async throws {
-        let service = failing(error)
+        let service = try failing(error)
 
         do {
             _ = try await service.all()
@@ -110,7 +123,7 @@ struct NotebookServiceErrorTests {
 
     @Test("defaultNotebook() translates too, rather than trapping")
     func defaultNotebookTranslates() async throws {
-        let service = failing(.corrupted("no notebooks"))
+        let service = try failing(.corrupted("no notebooks"))
 
         await #expect(throws: ServiceError.storageUnavailable) {
             try await service.defaultNotebook()
