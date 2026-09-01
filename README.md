@@ -56,6 +56,7 @@ cannot.
 | 0.1.0 | `NoteServicing`, `NoteChange`, `ServiceError` | `NoteService`: create, delete, read, recent |
 | 0.2.0 | `NotebookServicing` | `NotebookService`: reads |
 | 0.3.0 | `NotebookChange` | `NotebookService`: writes · `ChangeRelay` |
+| 0.4.0 | `NoteServicing` complete | `NoteService`: update, move, pin |
 
 ## Build
 

@@ -11,6 +11,11 @@ public protocol NoteServicing: Sendable {
 
     @discardableResult
     func create(_ draft: NoteDraft) async throws -> Note
+
+    @discardableResult
+    func update(_ id: NoteID, with edit: NoteEdit) async throws -> Note
+    func move(_ id: NoteID, to notebook: NotebookID) async throws
+    func setPinned(_ id: NoteID, _ pinned: Bool) async throws
     func delete(_ id: NoteID) async throws
 
     // MARK: Queries
