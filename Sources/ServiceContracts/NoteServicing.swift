@@ -24,6 +24,9 @@ public protocol NoteServicing: Sendable {
     func notes(_ ids: [NoteID]) async throws -> [Note]
     func recent(limit: Int) async throws -> [Note]
 
+    /// The notes in one notebook, or in all of them when `notebook` is `nil`.
+    func notes(in notebook: NotebookID?, limit: Int) async throws -> [Note]
+
     // MARK: Events
 
     var changes: AsyncStream<NoteChange> { get }

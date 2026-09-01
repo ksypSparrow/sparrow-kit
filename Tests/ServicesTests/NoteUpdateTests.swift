@@ -249,5 +249,12 @@ struct FailingNoteReader: NoteReading {
     func note(_ id: NoteID) async throws -> Note? { throw error }
     func notes(_ ids: [NoteID]) async throws -> [Note] { throw error }
     func recentNotes(limit: Int) async throws -> [Note] { throw error }
-    func count() async throws -> Int { throw error }
+
+    func notes(
+        matching filter: NoteFilter,
+        sort: NoteSort,
+        limit: Int
+    ) async throws -> [Note] { throw error }
+
+    func count(matching filter: NoteFilter) async throws -> Int { throw error }
 }
