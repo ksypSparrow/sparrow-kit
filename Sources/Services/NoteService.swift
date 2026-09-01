@@ -58,6 +58,7 @@ public actor NoteService: NoteServicing {
             title: draft.title,
             body: draft.body,
             notebookID: notebookID,
+            tagIDs: draft.tagIDs,
             kind: draft.kind,
             observedAt: draft.observedAt,
             createdAt: timestamp,
@@ -66,6 +67,7 @@ public actor NoteService: NoteServicing {
 
         try await translatingStorageErrors {
             try await transactions.write { session in
+                try Self.assertTagsExist(note.tagIDs, in: session)
                 try session.notes.insert(note)
                 try session.index.index(note)
                 try session.journal.record(
@@ -114,6 +116,7 @@ public actor NoteService: NoteServicing {
                 comparable.updatedAt = current.updatedAt
                 guard comparable != current else { return (current, false) }
 
+                try Self.assertTagsExist(updated.tagIDs, in: session)
                 try session.notes.update(updated)
                 try session.index.index(updated)
                 try session.journal.record(
@@ -195,6 +198,23 @@ public actor NoteService: NoteServicing {
     }
 
     // MARK: Resolution
+
+    /// Every tag a note claims must exist.
+    ///
+    /// ⚠️ Checked **inside** the transaction, and by the service rather than
+    /// left to the database. SQLite's foreign key would reject an unknown tag,
+    /// but as a `constraintViolated` that reaches a person as "Sparrow can't
+    /// reach your notes right now" — and the in-memory store has no foreign
+    /// key at all, so the two would disagree. One check, one message, both
+    /// stores.
+    private static func assertTagsExist(
+        _ tagIDs: [TagID],
+        in session: any StorageSession
+    ) throws {
+        for tagID in tagIDs where try session.tags.tag(tagID) == nil {
+            throw ServiceError.tagNotFound(tagID)
+        }
+    }
 
     /// FR-1.1: a note can be captured without naming a notebook. Storage
     /// guarantees a default exists, so this never fails for want of one.

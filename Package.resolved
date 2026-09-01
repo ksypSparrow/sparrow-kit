@@ -1,5 +1,5 @@
 {
-  "originHash" : "075ef93ef455a37dbca8db3f1eb67391c3baed2fb2b17e2e73e6e61be8b91673",
+  "originHash" : "8d2b089d1d09d51bb876d96d070d35ae19978dfd282f0a17e10944ffb2f7a301",
   "pins" : [
     {
       "identity" : "grdb.swift",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ksypSparrow/sparrow-cold-storage",
       "state" : {
-        "revision" : "11e2a8668f8d3860eedb9beae3bb4fcd76368762",
-        "version" : "0.6.0"
+        "revision" : "e701ae876cce921999acdf337c669eaa4f161e88",
+        "version" : "0.7.0"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ksypSparrow/sparrow-domain",
       "state" : {
-        "revision" : "d196fcfab25d98b938e507057746eec8d1e0d83e",
-        "version" : "0.5.0"
+        "revision" : "5b3fee333bf26939a38e8897e669b6f1de6ed1e5",
+        "version" : "0.6.0"
       }
     }
   ],

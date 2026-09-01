@@ -59,6 +59,7 @@ cannot.
 | 0.4.0 | `NoteServicing` complete | `NoteService`: update, move, pin |
 | 0.5.0 | `SearchServicing` | `SearchService`: search, suggestions |
 | 0.6.0 | `filter(_:sort:limit:)` | `SearchService`: Find · `notes(in:)` |
+| 0.7.0 | `TagServicing` | `TagService`: ensure, delete |
 
 ## Build
 

@@ -36,11 +36,14 @@ public actor ChangeRelay {
     private let thresholds: Thresholds
     private let notes = ServiceChangeBroadcaster<NoteChange>()
     private let notebooks = ServiceChangeBroadcaster<NotebookChange>()
+    private let tags = ServiceChangeBroadcaster<TagChange>()
 
     private var pendingNotes: [NoteID: NoteChange] = [:]
     private var pendingNoteOrder: [NoteID] = []
     private var pendingNotebooks: [NotebookID: NotebookChange] = [:]
     private var pendingNotebookOrder: [NotebookID] = []
+    private var pendingTags: [TagID: TagChange] = [:]
+    private var pendingTagOrder: [TagID] = []
     private var flush: Task<Void, Never>?
     private var consumption: Task<Void, Never>?
 
@@ -63,6 +66,10 @@ public actor ChangeRelay {
         notebooks.stream()
     }
 
+    public nonisolated var tagChanges: AsyncStream<TagChange> {
+        tags.stream()
+    }
+
     // MARK: Input
 
     /// A service reporting what it just did. The verb here is precise.
@@ -78,6 +85,14 @@ public actor ChangeRelay {
         guard let id = change.identifier else { return emit(notebook: .reloaded) }
         if pendingNotebooks.updateValue(change, forKey: id) == nil {
             pendingNotebookOrder.append(id)
+        }
+        scheduleFlush()
+    }
+
+    public func announce(_ change: TagChange) {
+        guard let id = change.identifier else { return emit(tag: .reloaded) }
+        if pendingTags.updateValue(change, forKey: id) == nil {
+            pendingTagOrder.append(id)
         }
         scheduleFlush()
     }
@@ -107,9 +122,15 @@ public actor ChangeRelay {
                 pendingNotebooks[id] = .updated(id)
                 pendingNotebookOrder.append(id)
             }
+        case .tags(let ids):
+            for id in ids where pendingTags[id] == nil {
+                pendingTags[id] = .updated(id)
+                pendingTagOrder.append(id)
+            }
         case .reloaded:
             emit(note: .reloaded)
             emit(notebook: .reloaded)
+            emit(tag: .reloaded)
             return
         }
         scheduleFlush()
@@ -146,12 +167,23 @@ public actor ChangeRelay {
         } else {
             notebookChanges.forEach { emit(notebook: $0) }
         }
+
+        let tagChanges = pendingTagOrder.compactMap { pendingTags[$0] }
+        pendingTags = [:]
+        pendingTagOrder = []
+        if tagChanges.count > thresholds.collapseAbove {
+            emit(tag: .reloaded)
+        } else {
+            tagChanges.forEach { emit(tag: $0) }
+        }
     }
 
     private func emit(note change: NoteChange) { notes.publish(change) }
     private func emit(notebook change: NotebookChange) {
         notebooks.publish(change)
     }
+
+    private func emit(tag change: TagChange) { tags.publish(change) }
 }
 
 private extension NoteChange {
@@ -165,6 +197,15 @@ private extension NoteChange {
 
 private extension NotebookChange {
     var identifier: NotebookID? {
+        switch self {
+        case .created(let id), .updated(let id), .deleted(let id): id
+        case .reloaded: nil
+        }
+    }
+}
+
+private extension TagChange {
+    var identifier: TagID? {
         switch self {
         case .created(let id), .updated(let id), .deleted(let id): id
         case .reloaded: nil
