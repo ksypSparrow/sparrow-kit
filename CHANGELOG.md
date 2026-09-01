@@ -7,6 +7,38 @@ Pre-1.0, **the minor is the breaking bump**.
 
 ## [Unreleased]
 
+## [0.5.0] — wave 4 · text search
+
+Depends on **SparrowColdStorage 0.5.0**. **SparrowDomain stays at 0.4.0** —
+wave 4 has a dash in that column, so there was nothing to bump.
+
+### Added
+
+- `SearchServicing` — `search(_:limit:)` (**FR-1.3**) and `suggestions(limit:)`
+  (**FR-1.6**).
+- `SearchService`, an actor holding a reader and an index.
+
+### Notes
+
+- **`SearchService` is never given a `TransactionRunning`.** With no writer in
+  its dependency graph, "searching never changes anything" is a property of the
+  type rather than a rule someone has to remember.
+- **Result order comes from the index.** `matches` decides it and `notes(_:)`
+  promises to preserve it; if that promise broke, results would silently
+  re-sort and look like a ranking bug rather than a contract violation. There
+  is a test here as well as in storage.
+- An empty query returns **nothing, not everything**. A search box that
+  silently means "show me the whole database" is both a performance problem and
+  a confusing one.
+- `suggestions` stays separate from `NoteServicing.recent`. Today they return
+  the same thing; when pinning or usage frequency starts to matter, only one
+  changes.
+
+### Deferred
+
+`filter(_:sort:limit:)` waits for 0.6.0 — it needs `NoteFilter`, which arrives
+in domain 0.5.0 next wave.
+
 ## [0.4.0] — wave 3 · note CRUD
 
 Depends on **SparrowDomain 0.4.0** and **SparrowColdStorage 0.4.0**.
