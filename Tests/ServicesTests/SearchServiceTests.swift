@@ -16,7 +16,7 @@ struct SearchServiceTests {
             notebooks: storage.notebooks,
             transactions: storage.transactions,
             relay: relay,
-            now: SteppingClock().now
+            clock: SteppingClock()
         )
         let search = SearchService(notes: storage.notes, index: storage.search)
         return (search, notes, storage)

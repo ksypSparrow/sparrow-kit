@@ -16,14 +16,14 @@ struct TagServiceTests {
             tags: storage.tags,
             transactions: storage.transactions,
             relay: relay,
-            now: clock.now
+            clock: clock
         )
         let notes = NoteService(
             notes: storage.notes,
             notebooks: storage.notebooks,
             transactions: storage.transactions,
             relay: relay,
-            now: clock.now
+            clock: clock
         )
         return (tags, notes, storage)
     }
@@ -148,11 +148,11 @@ struct NoteTaggingTests {
         return (
             TagService(
                 tags: storage.tags, transactions: storage.transactions,
-                relay: relay, now: clock.now
+                relay: relay, clock: clock
             ),
             NoteService(
                 notes: storage.notes, notebooks: storage.notebooks,
-                transactions: storage.transactions, relay: relay, now: clock.now
+                transactions: storage.transactions, relay: relay, clock: clock
             ),
             SearchService(notes: storage.notes, index: storage.search)
         )
@@ -243,11 +243,11 @@ struct UnknownTagTests {
         return (
             TagService(
                 tags: storage.tags, transactions: storage.transactions,
-                relay: relay, now: clock.now
+                relay: relay, clock: clock
             ),
             NoteService(
                 notes: storage.notes, notebooks: storage.notebooks,
-                transactions: storage.transactions, relay: relay, now: clock.now
+                transactions: storage.transactions, relay: relay, clock: clock
             ),
             storage
         )

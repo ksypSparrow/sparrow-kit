@@ -60,6 +60,7 @@ cannot.
 | 0.5.0 | `SearchServicing` | `SearchService`: search, suggestions |
 | 0.6.0 | `filter(_:sort:limit:)` | `SearchService`: Find · `notes(in:)` |
 | 0.7.0 | `TagServicing` | `TagService`: ensure, delete |
+| 0.8.0 | `SparrowClock` | daily notes · `openOrCreateDailyNote` |
 
 ## Build
 

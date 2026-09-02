@@ -11,7 +11,7 @@ import StorageContracts
 ///
 /// The test target links `ColdStorage`; `Sources/Services` never may.
 func makeService(
-    now: @escaping @Sendable () -> Date = { .distantPast },
+    clock: any SparrowClock = FixedSparrowClock(.distantPast),
     relay: ChangeRelay = ChangeRelay(thresholds: .immediate)
 ) throws -> (service: NoteService, storage: StorageSet) {
     let storage = try ColdStorage.inMemory()
@@ -20,7 +20,7 @@ func makeService(
         notebooks: storage.notebooks,
         transactions: storage.transactions,
         relay: relay,
-        now: now
+        clock: clock
     )
     return (service, storage)
 }
@@ -36,22 +36,26 @@ extension ChangeRelay.Thresholds {
 
 /// A clock that advances a fixed step on every read, so ordering assertions
 /// cannot flake and do not depend on wall-clock resolution.
-final class SteppingClock: Sendable {
+final class SteppingClock: SparrowClock {
     private let state = Mutex(Date(timeIntervalSince1970: 1_700_000_000))
     private let step: TimeInterval
+    private let calendar: Calendar
 
-    init(step: TimeInterval = 60) {
+    init(step: TimeInterval = 60, calendar: Calendar = .current) {
         self.step = step
+        self.calendar = calendar
     }
 
-    var now: @Sendable () -> Date {
-        { [self] in
-            // Captured through `self`: Mutex is non-copyable, so capturing the
-            // property directly would try to consume it.
-            state.withLock { current in
-                defer { current.addTimeInterval(step) }
-                return current
-            }
+    var now: Date {
+        // Accessed through `self`: Mutex is non-copyable, so capturing the
+        // property directly would try to consume it.
+        state.withLock { current in
+            defer { current.addTimeInterval(step) }
+            return current
         }
+    }
+
+    func startOfDay(_ date: Date) -> Date {
+        calendar.startOfDay(for: date)
     }
 }

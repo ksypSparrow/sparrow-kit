@@ -9,7 +9,7 @@ struct NoteServiceDeleteTests {
     @Test("A deleted note disappears from reads")
     func deletedNoteIsGone() async throws {
         let clock = SteppingClock()
-        let (service, storage) = try makeService(now: clock.now)
+        let (service, storage) = try makeService(clock: clock)
         let note = try await service.create(NoteDraft(title: "Transient"))
 
         try await service.delete(note.id)
@@ -31,7 +31,7 @@ struct NoteServiceDeleteTests {
     @Test("A failed delete leaves the other notes untouched")
     func failedDeleteChangesNothing() async throws {
         let clock = SteppingClock()
-        let (service, storage) = try makeService(now: clock.now)
+        let (service, storage) = try makeService(clock: clock)
         try await service.create(NoteDraft(title: "Survivor"))
 
         await #expect(throws: ServiceError.self) {

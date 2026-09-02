@@ -8,18 +8,18 @@ public actor TagService: TagServicing {
     private let tags: any TagReading
     private let transactions: any TransactionRunning
     private let relay: ChangeRelay
-    private let now: @Sendable () -> Date
+    private let clock: any SparrowClock
 
     public init(
         tags: any TagReading,
         transactions: any TransactionRunning,
         relay: ChangeRelay,
-        now: @escaping @Sendable () -> Date = { Date() }
+        clock: any SparrowClock = SystemSparrowClock()
     ) {
         self.tags = tags
         self.transactions = transactions
         self.relay = relay
-        self.now = now
+        self.clock = clock
     }
 
     public nonisolated var changes: AsyncStream<TagChange> {
@@ -50,7 +50,7 @@ public actor TagService: TagServicing {
                         subject: .tag(tag.id),
                         operation: .upsert,
                         payload: try JSONEncoder().encode(tag),
-                        recordedAt: self.now()
+                        recordedAt: self.clock.now
                     )
                 )
                 return existing != nil
@@ -63,7 +63,7 @@ public actor TagService: TagServicing {
     }
 
     public func delete(_ id: TagID) async throws {
-        let timestamp = now()
+        let timestamp = clock.now
 
         try await translatingStorageErrors(missing: .tagNotFound(id)) {
             try await transactions.write { session in

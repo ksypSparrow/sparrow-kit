@@ -23,7 +23,7 @@ struct NoteServiceTests {
     @Test("create stamps both timestamps from the injected clock")
     func createStampsTheClock() async throws {
         let fixed = Date(timeIntervalSince1970: 1_700_000_000)
-        let (service, _) = try makeService(now: { fixed })
+        let (service, _) = try makeService(clock: FixedSparrowClock(fixed))
 
         let note = try await service.create(NoteDraft(title: "Stamped"))
 
@@ -52,7 +52,7 @@ struct NoteServiceTests {
     @Test("recent returns newest first and honours the limit")
     func recentIsOrderedNewestFirst() async throws {
         let clock = SteppingClock()
-        let (service, _) = try makeService(now: clock.now)
+        let (service, _) = try makeService(clock: clock)
 
         for title in ["Oldest", "Middle", "Newest"] {
             try await service.create(NoteDraft(title: RichText(plain: title)))
@@ -65,7 +65,7 @@ struct NoteServiceTests {
     @Test("notes(_:) resolves several identifiers at once")
     func notesResolvesManyIdentifiers() async throws {
         let clock = SteppingClock()
-        let (service, _) = try makeService(now: clock.now)
+        let (service, _) = try makeService(clock: clock)
         let first = try await service.create(NoteDraft(title: "First"))
         let second = try await service.create(NoteDraft(title: "Second"))
 

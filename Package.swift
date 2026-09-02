@@ -15,7 +15,7 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/ksypSparrow/sparrow-cold-storage",
-            .upToNextMinor(from: "0.7.0")
+            .upToNextMinor(from: "0.8.0")
         ),
     ],
     targets: [

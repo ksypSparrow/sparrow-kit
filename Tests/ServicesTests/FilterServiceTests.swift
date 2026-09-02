@@ -16,7 +16,7 @@ struct FilterServiceTests {
             notebooks: storage.notebooks,
             transactions: storage.transactions,
             relay: relay,
-            now: SteppingClock().now
+            clock: SteppingClock()
         )
         let search = SearchService(notes: storage.notes, index: storage.search)
         return (search, notes, storage)
@@ -146,11 +146,11 @@ struct NotesInNotebookTests {
         let clock = SteppingClock()
         let notes = NoteService(
             notes: storage.notes, notebooks: storage.notebooks,
-            transactions: storage.transactions, relay: relay, now: clock.now
+            transactions: storage.transactions, relay: relay, clock: clock
         )
         let notebooks = NotebookService(
             notebooks: storage.notebooks,
-            transactions: storage.transactions, relay: relay, now: clock.now
+            transactions: storage.transactions, relay: relay, clock: clock
         )
 
         let wetlands = try await notebooks.create(NotebookDraft(name: "Wetlands"))
@@ -170,7 +170,7 @@ struct NotesInNotebookTests {
         let notes = NoteService(
             notes: storage.notes, notebooks: storage.notebooks,
             transactions: storage.transactions, relay: relay,
-            now: SteppingClock().now
+            clock: SteppingClock()
         )
         try await notes.create(NoteDraft(title: "One"))
         try await notes.create(NoteDraft(title: "Two"))
