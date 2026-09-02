@@ -11,18 +11,18 @@ public actor NotebookService: NotebookServicing {
     private let notebooks: any NotebookReading
     private let transactions: any TransactionRunning
     private let relay: ChangeRelay
-    private let now: @Sendable () -> Date
+    private let clock: any SparrowClock
 
     public init(
         notebooks: any NotebookReading,
         transactions: any TransactionRunning,
         relay: ChangeRelay,
-        now: @escaping @Sendable () -> Date = { Date() }
+        clock: any SparrowClock = SystemSparrowClock()
     ) {
         self.notebooks = notebooks
         self.transactions = transactions
         self.relay = relay
-        self.now = now
+        self.clock = clock
     }
 
     public nonisolated var changes: AsyncStream<NotebookChange> {
@@ -36,7 +36,7 @@ public actor NotebookService: NotebookServicing {
         let name = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { throw ServiceError.emptyNotebookName }
 
-        let timestamp = now()
+        let timestamp = clock.now
         let notebook = try await translatingStorageErrors {
             try await transactions.write { session in
                 // Storage answers where this lands, because only storage knows
@@ -73,7 +73,7 @@ public actor NotebookService: NotebookServicing {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { throw ServiceError.emptyNotebookName }
 
-        let timestamp = now()
+        let timestamp = clock.now
         try await translatingStorageErrors(missing: .notebookNotFound(id)) {
             try await transactions.write { session in
                 guard let current = try session.notebooks.notebook(id) else {
@@ -99,7 +99,7 @@ public actor NotebookService: NotebookServicing {
     }
 
     public func delete(_ id: NotebookID) async throws {
-        let timestamp = now()
+        let timestamp = clock.now
         try await translatingStorageErrors(missing: .notebookNotFound(id)) {
             try await transactions.write { session in
                 guard try session.notebooks.notebook(id) != nil else {

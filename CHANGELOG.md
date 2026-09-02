@@ -7,6 +7,40 @@ Pre-1.0, **the minor is the breaking bump**.
 
 ## [Unreleased]
 
+## [0.8.0] — wave 7 · daily notes and the clock
+
+Depends on **SparrowColdStorage 0.8.0**. **SparrowDomain stays at 0.6.0** — its
+second dash.
+
+### Changed — breaking
+
+**Every service's `init` takes a `clock: any SparrowClock` instead of
+`now: @Sendable () -> Date`.** The closure was a placeholder from 0.1.0,
+carried for seven waves because the design's chosen name collided with the
+standard library.
+
+### Added
+
+- `SparrowClock`, `SystemSparrowClock`, `FixedSparrowClock`.
+- `NoteServicing.dailyNote(on:)` and `openOrCreateDailyNote(on:)` (**FR-1.7**).
+
+### Notes
+
+- ⚠️ **Named `SparrowClock`, not `Clock`.** `Clock` is a Swift
+  standard-library protocol: `any Clock` would be ambiguous at every call site
+  outside this module, and `SystemClock` would read as if it were Apple's.
+- **`FixedSparrowClock` ships in the package**, not per test target. The app
+  needs it for previews, and a second copy would be a second definition of what
+  "yesterday" means.
+- **The race is settled by the unique index, not an in-transaction re-check.**
+  The plan asks for the re-check; it is not expressible, because
+  `NoteSessionAccess` has no day query. Instead everyone sees `nil`, everyone
+  inserts, one wins, and the losers catch the constraint violation and read the
+  winner's note — which also holds across processes, as a re-check would not.
+- 🧪 The concurrency test is **red without the loser's recovery** and green
+  with it.
+- No service reads `Date()` directly.
+
 ## [0.7.0] — wave 6 · tags
 
 Depends on **SparrowDomain 0.6.0** and **SparrowColdStorage 0.7.0**.

@@ -27,6 +27,20 @@ public protocol NoteServicing: Sendable {
     /// The notes in one notebook, or in all of them when `notebook` is `nil`.
     func notes(in notebook: NotebookID?, limit: Int) async throws -> [Note]
 
+    // MARK: Journaling
+
+    /// Today's entry, if it exists.
+    func dailyNote(on day: Date) async throws -> Note?
+
+    /// Today's entry, creating it if there is not one yet.
+    ///
+    /// ⚠️ **Deliberately one call, not a fetch followed by a create.** "Open
+    /// today's entry" (FR-1.7) must work whether or not today has one, and
+    /// splitting it would leave the race for every caller to lose
+    /// independently.
+    @discardableResult
+    func openOrCreateDailyNote(on day: Date) async throws -> Note
+
     // MARK: Events
 
     var changes: AsyncStream<NoteChange> { get }

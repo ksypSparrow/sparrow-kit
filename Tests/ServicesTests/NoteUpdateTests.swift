@@ -57,7 +57,7 @@ struct NoteUpdateTests {
     @Test("An edit changes only the fields it names")
     func partialEditTouchesOnlyNamedFields() async throws {
         let clock = SteppingClock()
-        let (service, _) = try makeService(now: clock.now)
+        let (service, _) = try makeService(clock: clock)
         let note = try await service.create(
             NoteDraft(title: "Kingfisher", body: "North bank")
         )
@@ -81,7 +81,7 @@ struct NoteUpdateTests {
     @Test("An empty edit changes nothing at all, timestamp included")
     func emptyEditIsANoOp() async throws {
         let clock = SteppingClock()
-        let (service, storage) = try makeService(now: clock.now)
+        let (service, storage) = try makeService(clock: clock)
         let note = try await service.create(NoteDraft(title: "Unchanged"))
         let journalled = try await storage.journal.pending(limit: 100).count
 
@@ -95,7 +95,7 @@ struct NoteUpdateTests {
     @Test("A real edit bumps updatedAt and journals once")
     func realEditJournals() async throws {
         let clock = SteppingClock()
-        let (service, storage) = try makeService(now: clock.now)
+        let (service, storage) = try makeService(clock: clock)
         let note = try await service.create(NoteDraft(title: "Before"))
         let journalled = try await storage.journal.pending(limit: 100).count
 
@@ -121,7 +121,7 @@ struct NoteUpdateTests {
     @Test("Rich text survives an edit")
     func richTextSurvivesAnEdit() async throws {
         let clock = SteppingClock()
-        let (service, _) = try makeService(now: clock.now)
+        let (service, _) = try makeService(clock: clock)
         var attributed = AttributedString("Kingfisher here")
         if let range = attributed.range(of: "Kingfisher") {
             attributed[range].inlinePresentationIntent = .stronglyEmphasized
@@ -140,7 +140,7 @@ struct NoteUpdateTests {
     @Test("move relocates the note")
     func moveRelocates() async throws {
         let clock = SteppingClock()
-        let (service, storage) = try makeService(now: clock.now)
+        let (service, storage) = try makeService(clock: clock)
         let target = makeNotebook("Wetlands")
         try await storage.transactions.write { session in
             try session.notebooks.insert(target)
@@ -157,7 +157,7 @@ struct NoteUpdateTests {
     @Test("Moving to a notebook that does not exist is refused")
     func moveToMissingNotebookIsRefused() async throws {
         let clock = SteppingClock()
-        let (service, _) = try makeService(now: clock.now)
+        let (service, _) = try makeService(clock: clock)
         let note = try await service.create(NoteDraft(title: "Stays put"))
         let ghost = NotebookID()
 
@@ -170,7 +170,7 @@ struct NoteUpdateTests {
     @Test("setPinned both pins and unpins")
     func setPinnedBothWays() async throws {
         let clock = SteppingClock()
-        let (service, _) = try makeService(now: clock.now)
+        let (service, _) = try makeService(clock: clock)
         let note = try await service.create(NoteDraft(title: "Pinnable"))
 
         try await service.setPinned(note.id, true)
@@ -183,7 +183,7 @@ struct NoteUpdateTests {
     @Test("Pinning an already-pinned note journals nothing new")
     func redundantPinIsANoOp() async throws {
         let clock = SteppingClock()
-        let (service, storage) = try makeService(now: clock.now)
+        let (service, storage) = try makeService(clock: clock)
         let note = try await service.create(NoteDraft(title: "Pinned"))
         try await service.setPinned(note.id, true)
         let journalled = try await storage.journal.pending(limit: 100).count
@@ -257,4 +257,5 @@ struct FailingNoteReader: NoteReading {
     ) async throws -> [Note] { throw error }
 
     func count(matching filter: NoteFilter) async throws -> Int { throw error }
+    func dailyNote(on day: Date) async throws -> Note? { throw error }
 }

@@ -26,20 +26,20 @@ public actor NoteService: NoteServicing {
     private let notebooks: any NotebookReading
     private let transactions: any TransactionRunning
     private let relay: ChangeRelay
-    private let now: @Sendable () -> Date
+    private let clock: any SparrowClock
 
     public init(
         notes: any NoteReading,
         notebooks: any NotebookReading,
         transactions: any TransactionRunning,
         relay: ChangeRelay,
-        now: @escaping @Sendable () -> Date = { Date() }
+        clock: any SparrowClock = SystemSparrowClock()
     ) {
         self.notes = notes
         self.notebooks = notebooks
         self.transactions = transactions
         self.relay = relay
-        self.now = now
+        self.clock = clock
     }
 
     public nonisolated var changes: AsyncStream<NoteChange> {
@@ -53,7 +53,7 @@ public actor NoteService: NoteServicing {
         guard !draft.isEmpty else { throw ServiceError.emptyNote }
 
         let notebookID = try await resolve(draft.notebookID)
-        let timestamp = now()
+        let timestamp = clock.now
         let note = Note(
             title: draft.title,
             body: draft.body,
@@ -93,7 +93,7 @@ public actor NoteService: NoteServicing {
             _ = try await resolve(target)
         }
 
-        let timestamp = now()
+        let timestamp = clock.now
         let outcome = try await translatingStorageErrors(
             missing: .noteNotFound(id)
         ) {
@@ -144,7 +144,7 @@ public actor NoteService: NoteServicing {
     }
 
     public func delete(_ id: NoteID) async throws {
-        let timestamp = now()
+        let timestamp = clock.now
 
         try await translatingStorageErrors(missing: .noteNotFound(id)) {
             try await transactions.write { session in
@@ -195,6 +195,75 @@ public actor NoteService: NoteServicing {
                 limit: limit
             )
         }
+    }
+
+    // MARK: Journaling
+
+    public func dailyNote(on day: Date) async throws -> Note? {
+        try await translatingStorageErrors { try await notes.dailyNote(on: day) }
+    }
+
+    /// Today's entry, creating it if there is not one yet.
+    ///
+    /// ⚠️ **The race is settled by the unique index, not by a second read.**
+    ///
+    /// The plan calls for re-checking inside the transaction. That is not
+    /// expressible: `NoteSessionAccess` has no day query — cold-storage 0.8.0
+    /// put `dailyNote(on:)` on `NoteReading`, which is the *outside* protocol —
+    /// and adding one would mean an unplanned storage release.
+    ///
+    /// It is also unnecessary, and weaker than what is here. Two intents
+    /// firing at midnight both see `nil`, both try to insert, and the partial
+    /// unique index lets exactly one through. The loser catches the violation
+    /// and reads the winner's note. That works across *processes* too, which
+    /// an in-transaction re-check would not.
+    @discardableResult
+    public func openOrCreateDailyNote(on day: Date) async throws -> Note {
+        // The common case: today's entry exists, and reading it should not
+        // open a write.
+        if let existing = try await dailyNote(on: day) { return existing }
+
+        let notebookID = try await resolve(nil)
+        let timestamp = clock.now
+        let note = Note(
+            title: RichText(plain: Self.dailyTitle(for: day)),
+            notebookID: notebookID,
+            kind: .daily,
+            // The day this entry is *about*, so one opened at 00:05 for
+            // yesterday still belongs to yesterday.
+            observedAt: day,
+            createdAt: timestamp,
+            updatedAt: timestamp
+        )
+
+        do {
+            try await transactions.write { session in
+                try session.notes.insert(note)
+                try session.index.index(note)
+                try session.journal.record(
+                    JournalDraft(
+                        subject: .note(note.id),
+                        operation: .upsert,
+                        payload: try JSONEncoder().encode(note),
+                        recordedAt: timestamp
+                    )
+                )
+            }
+        } catch let error as StorageError {
+            // Someone else got there first. Their note is committed by now.
+            if case .constraintViolated = error,
+               let winner = try await dailyNote(on: day) {
+                return winner
+            }
+            throw ServiceError.storageUnavailable
+        }
+
+        await relay.announce(.created(note.id))
+        return note
+    }
+
+    private static func dailyTitle(for day: Date) -> String {
+        day.formatted(.dateTime.year().month(.wide).day())
     }
 
     // MARK: Resolution

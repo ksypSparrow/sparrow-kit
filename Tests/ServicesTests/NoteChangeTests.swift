@@ -19,7 +19,7 @@ struct NoteChangeTests {
     @Test("delete announces deleted")
     func deleteAnnouncesDeleted() async throws {
         let clock = SteppingClock()
-        let (service, _) = try makeService(now: clock.now)
+        let (service, _) = try makeService(clock: clock)
         let note = try await service.create(NoteDraft(title: "Doomed"))
 
         var events = service.changes.makeAsyncIterator()
