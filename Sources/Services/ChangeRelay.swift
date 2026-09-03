@@ -132,6 +132,16 @@ public actor ChangeRelay {
             emit(notebook: .reloaded)
             emit(tag: .reloaded)
             return
+        // Reachable now that `StorageContracts` ships as a resilient binary. A
+        // change this build cannot name still means *something* changed, so it
+        // is treated as a reload rather than dropped — a missed event shows up
+        // as a stale list, which is the one failure the change stream exists to
+        // prevent.
+        @unknown default:
+            emit(note: .reloaded)
+            emit(notebook: .reloaded)
+            emit(tag: .reloaded)
+            return
         }
         scheduleFlush()
     }

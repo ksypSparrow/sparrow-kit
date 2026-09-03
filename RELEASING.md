@@ -7,7 +7,7 @@ Waits on two repositories, blocks the app.
 ```
    1  bump domain and cold-storage in Package.swift, as the wave requires
    2  swift package resolve
-   3  implement · swift test
+   3  implement · run the tests (see below)
    4  grep -rn "import ColdStorage" Sources/Services/   → must be empty
    5  CHANGELOG.md entry naming the wave
    6  git tag vX.Y.Z && git push --tags
@@ -21,7 +21,9 @@ with no visible symptom.
 ## Gate for every release
 
 ```
-   ✓  swift build && swift test
+   ✓  swift build
+   ✓  xcodebuild test -scheme SparrowKit-Package \
+          -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=27.0'
    ✓  swift build -Xswiftc -strict-concurrency=complete
    ✓  xcodebuild -scheme SparrowKit-Package \
         -destination 'generic/platform=iOS'
@@ -44,3 +46,20 @@ package stops building anywhere App Intents is unavailable.
 | Contracts | Depend on `SparrowDomain` and nothing else |
 
 **Never re-tag.** SwiftPM caches by tag.
+
+## ⚠️ Why the tests need a simulator now
+
+`swift test` no longer works in this package. Domain and storage arrive as
+binary `.xcframework`s containing **dynamic** frameworks, and SwiftPM does not
+set an rpath its test bundles can use:
+
+```
+   Library not loaded: @rpath/SparrowDomain.framework/Versions/A/SparrowDomain
+```
+
+`DYLD_FRAMEWORK_PATH` does not rescue it either — SIP strips `DYLD_*` when the
+toolchain's test helper is spawned. An iOS Simulator destination gives the tests
+a real host that embeds the frameworks properly.
+
+`swift build` still works, and is worth keeping in the loop: it catches
+compile-time breakage far faster than a simulator run.

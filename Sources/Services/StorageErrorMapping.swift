@@ -26,6 +26,12 @@ func translatingStorageErrors<T: Sendable>(
             throw missing()
         case .constraintViolated, .corrupted, .unavailable, .migrationFailed:
             throw ServiceError.storageUnavailable
+        // Reachable now that `StorageContracts` ships as a resilient binary.
+        // Unlike most `@unknown default`s this one is not a compromise: every
+        // case above except `.notFound` already maps here, so a storage error
+        // this build has not heard of is genuinely `.storageUnavailable`.
+        @unknown default:
+            throw ServiceError.storageUnavailable
         }
     }
 }
