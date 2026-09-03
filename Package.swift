@@ -11,6 +11,9 @@ let package = Package(
     products: [
         .library(name: "ServiceContracts", targets: ["ServiceContracts"]),
         .library(name: "Services", targets: ["Services"]),
+        // The composition root. Links `ColdStorage` so an app does not
+        // have to name a concrete store.
+        .library(name: "SparrowAssembly", targets: ["SparrowAssembly"]),
     ],
     dependencies: [
         .package(
@@ -37,6 +40,19 @@ let package = Package(
             .product(name: "StorageContracts", package: "sparrow-cold-storage"),
             // ColdStorage is deliberately absent. Adding it here is the
             // one-line mistake that collapses the layering.
+        ]),
+        // ⚠️ The **only** target here that links `ColdStorage`. It exists so
+        // the app does not have to: before it, `sparrow-app` depended on
+        // `sparrow-cold-storage` for one call. The layering still lives in the
+        // `Services` edge above, which stays storage-agnostic.
+        .target(name: "SparrowAssembly", dependencies: [
+            "Services",
+            "ServiceContracts",
+            .product(name: "ColdStorage", package: "sparrow-cold-storage"),
+        ]),
+        .testTarget(name: "SparrowAssemblyTests", dependencies: [
+            "SparrowAssembly",
+            "ServiceContracts",
         ]),
         // ⚠️ **Links no database.** The gate asks that every service test be
         // able to run with none, and the `Sources/Services` grep only proves
