@@ -15,11 +15,13 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/ksypSparrow/sparrow-domain",
-            .upToNextMinor(from: "0.6.0")
+            // ⚠️ `.upToNextMajor` now that both upstreams are 1.0.0 — after a
+            // compatibility promise, the major is the breaking bump.
+            .upToNextMajor(from: "1.0.0")
         ),
         .package(
             url: "https://github.com/ksypSparrow/sparrow-cold-storage",
-            .upToNextMinor(from: "0.8.0")
+            .upToNextMajor(from: "1.0.0")
         ),
     ],
     targets: [
@@ -35,6 +37,14 @@ let package = Package(
             .product(name: "StorageContracts", package: "sparrow-cold-storage"),
             // ColdStorage is deliberately absent. Adding it here is the
             // one-line mistake that collapses the layering.
+        ]),
+        // ⚠️ **Links no database.** The gate asks that every service test be
+        // able to run with none, and the `Sources/Services` grep only proves
+        // the *library* does not link one. This target proves the services are
+        // actually usable that way: hand-written fakes, no `ColdStorage`.
+        .testTarget(name: "ServicesIsolationTests", dependencies: [
+            "Services",
+            "ServiceContracts",
         ]),
         .testTarget(name: "ServicesTests", dependencies: [
             "Services",
