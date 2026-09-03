@@ -62,6 +62,7 @@ cannot.
 | 0.7.0 | `TagServicing` | `TagService`: ensure, delete |
 | 0.8.0 | `SparrowClock` | daily notes · `openOrCreateDailyNote` |
 | 0.9.0 | — | localized `ServiceError`, en + fr |
+| **1.0.0** | *stable* | + a test target that links no database |
 
 ## Build
 

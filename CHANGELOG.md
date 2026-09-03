@@ -7,6 +7,62 @@ Pre-1.0, **the minor is the breaking bump**.
 
 ## [Unreleased]
 
+## [1.0.0] — wave 12 · stable
+
+Requires **SparrowDomain 1.0.0** and **SparrowColdStorage 1.0.0**, both pinned
+`.upToNextMajor`.
+
+### The public surface
+
+| Protocol | |
+|---|---|
+| `NoteServicing` | create · update · move · setPinned · delete · reads · daily notes |
+| `NotebookServicing` | create · rename · delete · reads |
+| `TagServicing` | ensure · delete · reads |
+| `SearchServicing` | search · filter · count · suggestions |
+| `SparrowClock` | `SystemSparrowClock` · `FixedSparrowClock` |
+| `NoteChange` · `NotebookChange` · `TagChange` · `ServiceError` | |
+
+Implementations: `NoteService`, `NotebookService`, `TagService`,
+`SearchService`, `ChangeRelay`.
+
+### Added — a test target that links no database
+
+**`ServicesIsolationTests`.** The gate asks that every service test be able to
+run with no database linked; `ServicesTests` deliberately links `ColdStorage`,
+so that suites fail when storage's behaviour drifts from what the services
+assume.
+
+That left a question the greps cannot answer: *could* a service run without a
+database? This target answers it — hand-written fakes over `StorageContracts`
+alone, no `ColdStorage`, exercising create/read/pin/delete, notebook
+resolution, validation ordering and error translation.
+
+If the service layer had ever leaked a storage implementation detail into its
+own API, `FakeStore` could not exist.
+
+### The four greps
+
+```
+   import ColdStorage   → empty
+   import AppIntents    → empty
+   import SwiftUI       → empty
+   import GRDB          → empty
+```
+
+The whole layering, checkable in four seconds. `ServiceContracts` imports
+`Foundation` and `SparrowDomain`, and nothing else.
+
+### What this release promises
+
+- **`ServiceError` conforms to `LocalizedError` and nothing from App Intents.**
+  That is what keeps this package buildable where the framework does not exist.
+- **`SearchService` holds no `TransactionRunning`** — searching cannot change
+  anything, structurally.
+- **Every write goes through one `write { }`.** There is no reachable path to a
+  writer outside a transaction.
+- **`StorageError` never escapes.** Every path out translates.
+
 ## [0.9.0] — wave 11 · localized errors
 
 **No dependency bumps.** Domain and cold-storage both have dashes this wave.
