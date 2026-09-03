@@ -3,6 +3,10 @@ import PackageDescription
 
 let package = Package(
     name: "SparrowKit",
+    // ⚠️ Required before a target may carry a string catalog. Without it
+    // SwiftPM refuses the resource, and `Bundle.module` has nothing to look
+    // in.
+    defaultLocalization: "en",
     platforms: [.iOS(.v27), .macOS(.v27)],
     products: [
         .library(name: "ServiceContracts", targets: ["ServiceContracts"]),
@@ -19,9 +23,13 @@ let package = Package(
         ),
     ],
     targets: [
-        .target(name: "ServiceContracts", dependencies: [
-            .product(name: "SparrowDomain", package: "sparrow-domain"),
-        ]),
+        .target(
+            name: "ServiceContracts",
+            dependencies: [
+                .product(name: "SparrowDomain", package: "sparrow-domain"),
+            ],
+            resources: [.process("Resources")]
+        ),
         .target(name: "Services", dependencies: [
             "ServiceContracts",
             .product(name: "StorageContracts", package: "sparrow-cold-storage"),
@@ -30,6 +38,7 @@ let package = Package(
         ]),
         .testTarget(name: "ServicesTests", dependencies: [
             "Services",
+            "ServiceContracts",
             // Tests link the implementation to prove the whole stack works.
             // Sources/Services never may — see RELEASING.md.
             .product(name: "ColdStorage", package: "sparrow-cold-storage"),

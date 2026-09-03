@@ -7,6 +7,36 @@ Pre-1.0, **the minor is the breaking bump**.
 
 ## [Unreleased]
 
+## [0.9.0] — wave 11 · localized errors
+
+**No dependency bumps.** Domain and cold-storage both have dashes this wave.
+The last release before 1.0.0.
+
+### Added
+
+- A **string catalog** in `ServiceContracts`, English and French.
+- `defaultLocalization: "en"` on the package — required before a target may
+  carry one.
+
+### Changed
+
+`ServiceError`'s descriptions and recovery suggestions now go through
+`String(localized:bundle: .module)` instead of being Swift literals.
+
+### Notes
+
+- ⚠️ **`LocalizedError`, still not
+  `CustomLocalizedStringResourceConvertible`.** The latter is an App Intents
+  protocol, and adopting it would make this target — and therefore `Services` —
+  unbuildable without the framework, which is exactly what the V2 server cannot
+  have. The app maps `ServiceError` into its own error type.
+- ⚠️ **`bundle: .module` matters, and its absence would be invisible.** The
+  keys *are* the English text, so a lookup that failed entirely would still
+  read perfectly in English and never translate. The test therefore asserts the
+  French differs from the English — there is nothing to assert in English.
+- 🧪 Checked by removing one French translation: the test fails and names the
+  case.
+
 ## [0.8.0] — wave 7 · daily notes and the clock
 
 Depends on **SparrowColdStorage 0.8.0**. **SparrowDomain stays at 0.6.0** — its
