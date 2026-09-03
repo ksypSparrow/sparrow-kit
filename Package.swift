@@ -27,20 +27,20 @@ let package = Package(
         // consumes them that way. These are an Apple-platform convenience.
         .binaryTarget(
             name: "SparrowDomain",
-            url: "https://github.com/ksypSparrow/sparrow-domain/releases/download/1.1.1/SparrowDomain.xcframework.zip",
-            checksum: "0dead9809df81e73642075df04bfc64575a9d1332e5d2909f811012a2a749bd0"
+            url: "https://github.com/ksypSparrow/sparrow-domain/releases/download/2.0.0/SparrowDomain.xcframework.zip",
+            checksum: "ab2924912497ecb95f90168f6bf445c028ad1cdeef617d008ac371121c7526ef"
         ),
         .binaryTarget(
             name: "StorageContracts",
-            url: "https://github.com/ksypSparrow/sparrow-cold-storage/releases/download/2.0.0/StorageContracts.xcframework.zip",
-            checksum: "7c6a7346e9b9f5fb8827c7817fb82310c2054004ef8ee73592df757f5dd81629"
+            url: "https://github.com/ksypSparrow/sparrow-cold-storage/releases/download/3.0.0/StorageContracts.xcframework.zip",
+            checksum: "f2f23b91bf68c3f7cd2329d8a0f92b2ff939c09f62d63cb85749d3c6b7cfd518"
         ),
         // ⚠️ GRDB is compiled inside this one and appears nowhere in its public
         // interface. That is what lets this package have no dependencies.
         .binaryTarget(
             name: "ColdStorage",
-            url: "https://github.com/ksypSparrow/sparrow-cold-storage/releases/download/2.0.0/ColdStorage.xcframework.zip",
-            checksum: "218cfa06b5b5d87754d4c1aa35b55cb42ac95f418312daafe3ae11d89f2d61ac"
+            url: "https://github.com/ksypSparrow/sparrow-cold-storage/releases/download/3.0.0/ColdStorage.xcframework.zip",
+            checksum: "63d5589cd05975c044a483164cd3a4ebec46600842ac00f41db017032b913aac"
         ),
         .target(
             name: "ServiceContracts",
