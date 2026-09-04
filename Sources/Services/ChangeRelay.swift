@@ -201,6 +201,11 @@ private extension NoteChange {
         switch self {
         case .created(let id), .updated(let id), .deleted(let id): id
         case .reloaded: nil
+        // ⚠️ Required only when ServiceContracts is consumed as a resilient
+        // binary — in-package it is frozen and this is unreachable. `nil` is
+        // the correct answer rather than a fallback: it means "no single
+        // identifier", which is exactly how `.reloaded` is already treated.
+        @unknown default: nil
         }
     }
 }
@@ -210,6 +215,11 @@ private extension NotebookChange {
         switch self {
         case .created(let id), .updated(let id), .deleted(let id): id
         case .reloaded: nil
+        // ⚠️ Required only when ServiceContracts is consumed as a resilient
+        // binary — in-package it is frozen and this is unreachable. `nil` is
+        // the correct answer rather than a fallback: it means "no single
+        // identifier", which is exactly how `.reloaded` is already treated.
+        @unknown default: nil
         }
     }
 }
@@ -219,6 +229,11 @@ private extension TagChange {
         switch self {
         case .created(let id), .updated(let id), .deleted(let id): id
         case .reloaded: nil
+        // ⚠️ Required only when ServiceContracts is consumed as a resilient
+        // binary — in-package it is frozen and this is unreachable. `nil` is
+        // the correct answer rather than a fallback: it means "no single
+        // identifier", which is exactly how `.reloaded` is already treated.
+        @unknown default: nil
         }
     }
 }
